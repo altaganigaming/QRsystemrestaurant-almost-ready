@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import Bill from "@/components/bill";
 import { money, STATUS_LABEL } from "@/lib/utils";
 
-export default function AccountClient({ user, orders, settings }: { user: any; orders: any[]; settings: any }) {
+export default function AccountClient({ user, orders, messages, settings, redirectTo }: { user: any; orders: any[]; messages: any[]; settings: any; redirectTo: string }) {
   const sb = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,9 +21,15 @@ export default function AccountClient({ user, orders, settings }: { user: any; o
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) setMsg(error.message); else location.reload();
     } else {
-      const { error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
-      setMsg(error ? error.message : "Account created! You can log in now.");
-      if (!error) setMode("login");
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password, fullName: name }),
+      });
+      const result = await response.json() as { error?: string; email?: string };
+      if (!response.ok || result.error || !result.email) { setMsg(result.error ?? "Unable to create account."); return; }
+      const { error } = await sb.auth.signInWithPassword({ email: result.email, password });
+      if (error) setMsg(error.message); else location.href = redirectTo;
     }
   }
 
@@ -63,6 +69,18 @@ export default function AccountClient({ user, orders, settings }: { user: any; o
       </div>
 
       <ProfileForm onSave={saveAddress} msg={msg} />
+
+      {messages.length > 0 ? (
+        <section className="mt-6">
+          <h2 className="mb-3 text-lg font-bold">Offers & Messages</h2>
+          <div className="space-y-3">{messages.map((message: any) => (
+            <article key={message.id} className="card border-brand/20 bg-brand/[0.04] p-4">
+              <div className="flex items-center justify-between gap-3"><p className="font-bold">{message.subject || (message.kind === "offer" ? "Special Offer" : "Message from Restaurant")}</p><span className="text-xs text-black/45">{new Date(message.created_at).toLocaleDateString()}</span></div>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-black/70">{message.body}</p>
+            </article>
+          ))}</div>
+        </section>
+      ) : null}
 
       <h2 className="mb-3 mt-8 text-lg font-bold">My Orders</h2>
       {orders.length === 0 && <p className="text-black/50">No orders yet.</p>}

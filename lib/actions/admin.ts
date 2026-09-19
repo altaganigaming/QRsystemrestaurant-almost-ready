@@ -180,10 +180,27 @@ export async function listCustomerUsers() {
   const supabase = createAdminClient();
   const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
   if (error) return [];
+  const { data: orders } = await supabase.from("orders").select("id, customer_id, order_number, status, grand_total, placed_at").not("customer_id", "is", null).order("placed_at", { ascending: false });
+  const stats = new Map<string, { count: number; total: number }>();
+  for (const order of orders ?? []) {
+    if (!order.customer_id) continue;
+    const current = stats.get(order.customer_id) ?? { count: 0, total: 0 };
+    current.count += 1;
+    current.total += Number(order.grand_total ?? 0);
+    stats.set(order.customer_id, current);
+  }
   return data.users
     .filter((user) => (user.app_metadata?.role ?? "customer") === "customer")
-    .map((user) => ({ id: user.id, email: user.email, full_name: user.user_metadata?.full_name ?? "", created_at: user.created_at }))
+    .map((user) => ({ id: user.id, email: user.email, full_name: user.user_metadata?.full_name ?? "", created_at: user.created_at, order_count: stats.get(user.id)?.count ?? 0, total_spent: Number(stats.get(user.id)?.total ?? 0).toFixed(2), order_history: (orders ?? []).filter((order) => order.customer_id === user.id).map(({ customer_id: _customerId, ...order }) => order) }))
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+export async function sendCustomerMessage(recipientId: string, subject: string, body: string, kind: "offer" | "message" = "message") {
+  await requireAdmin();
+  if (!body.trim()) return { error: "Message cannot be empty." };
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("customer_messages").insert({ recipient_id: recipientId, subject: subject.trim() || null, body: body.trim(), kind });
+  return { error: error?.message ?? null };
 }
 
 export async function deleteCustomerUser(userId: string) {

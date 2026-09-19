@@ -77,7 +77,7 @@ function CheckoutInner() {
           <div className="mt-4 space-y-3">
             {!user ? (
               <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
-                Home delivery requires an account. <a className="font-semibold underline" href="/account">Login or Sign up</a>
+                Home delivery requires an account. <a className="font-semibold underline" href="/account?next=/checkout">Login or Sign up</a>
               </p>
             ) : (
               <>

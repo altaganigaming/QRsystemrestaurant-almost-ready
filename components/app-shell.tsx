@@ -6,7 +6,7 @@ import SiteFooter from "@/components/site-footer";
 import CartDrawer from "@/components/cart-drawer";
 
 export default function AppShell({ children, settings }: { children: React.ReactNode; settings: any }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const hideCustomerChrome = pathname.startsWith("/admin") || pathname.startsWith("/kitchen");
 
   return (

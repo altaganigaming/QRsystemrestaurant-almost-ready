@@ -8,7 +8,7 @@ export default function TableCapture() {
   const params = useSearchParams();
   const { setTableCode } = useCart();
   useEffect(() => {
-    const code = params.get("table");
+    const code = params?.get("table");
     if (code) setTableCode(code.toUpperCase());
   }, [params, setTableCode]);
   return null;
