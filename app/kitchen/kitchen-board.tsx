@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { advanceOrder } from "@/lib/actions/kitchen";
+import { advanceOrder, markKitchenPaid } from "@/lib/actions/kitchen";
+import { billText } from "@/components/bill";
 import type { Order } from "@/lib/types";
 import { money, STATUS_LABEL } from "@/lib/utils";
 
 const COLUMNS = ["new", "preparing", "ready"] as const;
 const PREP_TIMES = [5, 10, 15, 20];
 
-export default function KitchenBoard({ currency }: { currency: string }) {
+export default function KitchenBoard({ currency, restaurantName }: { currency: string; restaurantName: string }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const sound = useRef<HTMLAudioElement | null>(null);
 
@@ -60,7 +61,7 @@ export default function KitchenBoard({ currency }: { currency: string }) {
             </h2>
             <div className="space-y-3">
               {orders.filter((o) => o.status === col).map((o) => (
-                <OrderCard key={o.id} order={o} currency={currency} onAdvance={advance} />
+                <OrderCard key={o.id} order={o} currency={currency} restaurantName={restaurantName} onAdvance={advance} onPayment={(id) => setOrders((prev) => prev.map((x) => x.id === id ? { ...x, payment_status: "paid", payment_method: "cash" } : x))} />
               ))}
               {orders.filter((o) => o.status === col).length === 0 && (
                 <p className="rounded-xl border border-dashed p-4 text-center text-sm text-black/35">No orders</p>
@@ -73,7 +74,7 @@ export default function KitchenBoard({ currency }: { currency: string }) {
   );
 }
 
-function OrderCard({ order, currency, onAdvance }: { order: Order; currency: string; onAdvance: (o: Order, s: Order["status"], prep?: number) => void }) {
+function OrderCard({ order, currency, restaurantName, onAdvance, onPayment }: { order: Order; currency: string; restaurantName: string; onAdvance: (o: Order, s: Order["status"], prep?: number) => void; onPayment: (id: string) => void }) {
   const elapsed = Math.floor((Date.now() - new Date(order.placed_at).getTime()) / 60000);
   return (
     <article className="card p-4">
@@ -106,6 +107,21 @@ function OrderCard({ order, currency, onAdvance }: { order: Order; currency: str
       <div className="flex items-center justify-between border-t pt-2 text-sm font-bold">
         <span>{money(order.grand_total, currency)}</span>
         <span className="text-xs font-medium text-black/45">{order.payment_status === "paid" ? "PAID" : "UNPAID"}</span>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {order.payment_status === "unpaid" ? (
+          <button className="btn-outline !py-1.5 text-sm" onClick={async () => {
+            const result = await markKitchenPaid(order.id, "cash");
+            if (result.error) alert(result.error);
+            else onPayment(order.id);
+          }}>Mark Paid (Cash)</button>
+        ) : <span className="badge bg-emerald-50 text-emerald-700">Payment received</span>}
+        <a
+          className="btn-outline !py-1.5 text-sm"
+          target="_blank"
+          rel="noreferrer"
+          href={`https://wa.me/?text=${encodeURIComponent(billText(order, restaurantName, currency))}`}
+        >Send Bill on WhatsApp</a>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {order.status === "new" && (

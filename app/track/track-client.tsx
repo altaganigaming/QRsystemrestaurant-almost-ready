@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getTrackableOrder } from "@/lib/actions/ordering";
 import { createClient } from "@/lib/supabase/client";
 import type { Order } from "@/lib/types";
@@ -12,6 +12,8 @@ const STEPS = ["new", "preparing", "ready", "completed"] as const;
 export default function TrackClient({ orderId, token, settings }: { orderId: string; token: string; settings: any }) {
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
     const res = await getTrackableOrder(orderId, token);
@@ -44,6 +46,18 @@ export default function TrackClient({ orderId, token, settings }: { orderId: str
   const currency = settings?.currency ?? "₹";
   const stepIdx = order.status === "cancelled" ? -1 : STEPS.indexOf(order.status as any);
   const cancelled = order.status === "cancelled";
+  const restaurantName = settings?.restaurant_name ?? "our restaurant";
+  const reviewMessages = useMemo(() => [
+    `We had a wonderful experience at ${restaurantName}. The food was delicious and the service was excellent!`,
+    `Thank you, ${restaurantName}, for the great food and warm service. We will visit again soon.`,
+    `Highly recommend ${restaurantName}! Fresh food, quick service, and a lovely dining experience.`,
+  ], [restaurantName]);
+
+  async function copyReviewMessage() {
+    await navigator.clipboard?.writeText(reviewMessages[messageIndex]);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
 
   return (
     <div className="mx-auto max-w-xl px-4 py-8">
@@ -78,14 +92,19 @@ export default function TrackClient({ orderId, token, settings }: { orderId: str
         <Bill order={order} settings={settings} />
       </div>
       {["completed", "closed"].includes(order.status) && settings?.social?.google_review ? (
-        <a
-          href={settings.social.google_review}
-          target="_blank"
-          rel="noreferrer"
-          className="btn-primary mt-5 w-full"
-        >
-          Share your experience on Google
-        </a>
+        <section id="google-review" className="card mt-5 scroll-mt-20 space-y-3 border-brand/15 bg-brand/[0.04] p-4">
+          <div>
+            <h2 className="font-bold">How was your experience at {restaurantName}?</h2>
+            <p className="mt-1 text-xs text-black/55">Choose a message, copy it, then open the direct Google review page.</p>
+          </div>
+          <select className="input" value={messageIndex} onChange={(e) => setMessageIndex(Number(e.target.value))} aria-label="Choose review message">
+            {reviewMessages.map((message, index) => <option key={message} value={index}>{message}</option>)}
+          </select>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-outline flex-1" onClick={copyReviewMessage}>{copied ? "Copied" : "Copy message"}</button>
+            <a href={settings.social.google_review} target="_blank" rel="noreferrer" className="btn-primary flex-1 text-center">Open Google Reviews</a>
+          </div>
+        </section>
       ) : null}
       <p className="mt-4 text-center text-xs text-black/40">This page updates automatically as the kitchen progresses your order.</p>
     </div>

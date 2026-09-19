@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus, Trash2, X } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart-provider";
 import { money } from "@/lib/utils";
@@ -16,16 +16,26 @@ export default function CartDrawer({ settings }: { settings: any }) {
     return () => window.removeEventListener("rms:open-cart", handler);
   }, []);
 
-  if (!open) return null;
   const currency = settings?.currency ?? "₹";
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={() => setOpen(false)}>
-      <aside className="flex h-full w-full max-w-md flex-col bg-white p-4" onClick={(e) => e.stopPropagation()}>
+    <>
+      {!open && cart.count > 0 ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="fixed bottom-5 right-4 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-brand px-4 text-sm font-bold text-white shadow-xl ring-4 ring-white/80"
+          aria-label="Open cart"
+        >
+          <ShoppingCart className="h-5 w-5" />
+          Cart <span className="grid h-6 min-w-6 place-items-center rounded-full bg-white px-1 text-xs text-brand">{cart.count}</span>
+        </button>
+      ) : null}
+      {open ? <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:p-4" onClick={() => setOpen(false)}>
+      <aside className="flex max-h-[90dvh] w-full max-w-md flex-col rounded-t-2xl bg-white p-4 shadow-2xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-bold">Your Cart</h2>
           <button className="btn-ghost !p-2" onClick={() => setOpen(false)} aria-label="Close"><X className="h-5 w-5" /></button>
         </div>
-        <div className="flex-1 space-y-3 overflow-y-auto">
+        <div className="max-h-[55dvh] space-y-3 overflow-y-auto pr-1">
           {cart.items.length === 0 && <p className="text-black/50">Cart is empty.</p>}
           {cart.items.map((i) => (
             <div key={i.key} className="card flex gap-3 p-3">
@@ -53,6 +63,7 @@ export default function CartDrawer({ settings }: { settings: any }) {
           <Link href="/checkout" className="btn-primary w-full" onClick={() => setOpen(false)}>Review & Place Order</Link>
         </div>
       </aside>
-    </div>
+    </div> : null}
+    </>
   );
 }

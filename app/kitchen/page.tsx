@@ -20,7 +20,7 @@ export default async function KitchenPage() {
         <h1 className="text-xl font-bold md:text-2xl">🍳 {(settings as any)?.restaurant_name} — Kitchen</h1>
         <LogoutButton redirectTo="/kitchen/login" />
       </div>
-      <KitchenBoard currency={(settings as any)?.currency ?? "₹"} />
+      <KitchenBoard currency={(settings as any)?.currency ?? "₹"} restaurantName={(settings as any)?.restaurant_name ?? "Restaurant"} />
     </div>
   );
 }
