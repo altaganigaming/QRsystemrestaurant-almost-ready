@@ -3,9 +3,7 @@ import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTheme, themeStyleVars } from "@/lib/themes";
 import { CartProvider } from "@/components/cart-provider";
-import SiteHeader from "@/components/site-header";
-import SiteFooter from "@/components/site-footer";
-import CartDrawer from "@/components/cart-drawer";
+import AppShell from "@/components/app-shell";
 
 export const dynamic = "force-dynamic";
 export const viewport: Viewport = {
@@ -28,10 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <CartProvider>
-          <SiteHeader settings={s} />
-          <main className="min-h-[70vh]">{children}</main>
-          <SiteFooter settings={s} />
-          <CartDrawer settings={s} />
+          <AppShell settings={s}>{children}</AppShell>
         </CartProvider>
       </body>
     </html>
