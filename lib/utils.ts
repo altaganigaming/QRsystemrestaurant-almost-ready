@@ -13,8 +13,8 @@ export const STATUS_LABEL: Record<string, string> = {
 };
 
 export function hexToRgbVar(hex: string): string {
-  const h = hex.replace("#", "");
+  const h = typeof hex === "string" ? hex.replace("#", "") : "000000";
   const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
-  const n = parseInt(full, 16);
+  const n = /^[0-9a-f]{6}$/i.test(full) ? parseInt(full, 16) : 0;
   return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
 }

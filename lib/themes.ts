@@ -12,8 +12,19 @@ export const THEMES: { id: string; name: string; colors: ThemeColors }[] = [
 ];
 
 export function resolveTheme(themeId: string, custom: ThemeColors | null): ThemeColors {
-  if (custom) return custom;
-  return THEMES.find((t) => t.id === themeId)?.colors ?? THEMES[0].colors;
+  const fallback = THEMES.find((t) => t.id === themeId)?.colors ?? THEMES[0].colors;
+  if (!custom || typeof custom !== "object") return fallback;
+  return {
+    primary: safeColor(custom.primary, fallback.primary),
+    secondary: safeColor(custom.secondary, fallback.secondary),
+    accent: safeColor(custom.accent, fallback.accent),
+    surface: safeColor(custom.surface, fallback.surface),
+    text: safeColor(custom.text, fallback.text),
+  };
+}
+
+function safeColor(value: unknown, fallback: string) {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
 }
 
 export function themeStyleVars(c: ThemeColors): Record<string, string> {
