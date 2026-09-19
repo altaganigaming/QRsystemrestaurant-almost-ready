@@ -115,6 +115,7 @@ export default function SettingsForm({ settings }: { settings: S }) {
           <Field label="Service charge %"><input className="input" type="number" step="0.01" value={s.service_charge_percent ?? 0} onChange={(e) => set("service_charge_percent", Number(e.target.value))} /></Field>
         </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={s.delivery_enabled ?? true} onChange={(e) => set("delivery_enabled", e.target.checked)} /> Enable home delivery / order online</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={s.admin_order_notifications ?? true} onChange={(e) => set("admin_order_notifications", e.target.checked)} /> Enable new-order notifications on admin devices</label>
       </Section>
 
       <button className="btn-primary mt-4 w-full !py-3" disabled={busy} onClick={save}>{busy ? "Saving…" : "Save All Settings"}</button>

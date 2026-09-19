@@ -28,6 +28,7 @@ export interface Settings {
   is_open: boolean;
   service_status: "active" | "suspended";
   delivery_enabled: boolean;
+  admin_order_notifications: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 import { LayoutDashboard, ReceiptText, UtensilsCrossed, Grid2x2, Images, Settings, ChefHat, LogOut, Users } from "lucide-react";
+import AdminOrderNotifier from "./admin-order-notifier";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -18,7 +19,7 @@ const NAV = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
-export default function AdminShell({ children }: { children: React.ReactNode; restaurantName?: string }) {
+export default function AdminShell({ children, notificationsEnabled }: { children: React.ReactNode; notificationsEnabled: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -32,6 +33,7 @@ export default function AdminShell({ children }: { children: React.ReactNode; re
 
   return (
     <div className="flex min-h-screen bg-surface">
+      <AdminOrderNotifier enabled={notificationsEnabled} />
       <aside className="no-print fixed inset-y-0 left-0 z-40 flex w-16 flex-col border-r bg-white md:w-56">
         <div className="hidden p-4 text-lg font-extrabold text-brand md:block">Admin Panel</div>
         <nav className="flex-1 space-y-1 p-2">
