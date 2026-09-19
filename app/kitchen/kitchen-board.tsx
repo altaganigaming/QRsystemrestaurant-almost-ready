@@ -6,6 +6,7 @@ import { advanceOrder } from "@/lib/actions/kitchen";
 import type { Order } from "@/lib/types";
 import { money, STATUS_LABEL } from "@/lib/utils";
 import { billText } from "@/components/bill";
+import BillPdfButton from "@/components/bill-pdf-button";
 
 const COLUMNS = ["new", "preparing", "ready"] as const;
 const PREP_TIMES = [5, 10, 15, 20];
@@ -44,7 +45,7 @@ export default function KitchenBoard({ currency, restaurantName }: { currency: s
   }, []);
 
   async function advance(o: Order, status: Order["status"], prep?: number, paymentStatus?: Order["payment_status"]) {
-    const r = await advanceOrder(o.id, status, prep, paymentStatus, paymentStatus === "paid" ? "upi" : undefined);
+    const r = await advanceOrder(o.id, status, prep, paymentStatus, paymentStatus === "paid" ? "upi" : null);
     if ("error" in r && r.error) alert(r.error);
     else setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, status, estimated_prep_minutes: prep ?? x.estimated_prep_minutes, payment_status: paymentStatus ?? x.payment_status } : x)));
   }
@@ -169,6 +170,7 @@ function OrderCard({ order, currency, restaurantName, onAdvance, onShareBill }: 
               <button className="btn-outline !py-1.5 text-sm" onClick={() => onShareBill(order, restaurantName, currency)}>
                 Share Bill on WhatsApp
               </button>
+              <BillPdfButton order={order} restaurantName={restaurantName} currency={currency} />
             </div>
           </div>
         )}

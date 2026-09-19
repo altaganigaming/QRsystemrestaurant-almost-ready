@@ -39,7 +39,7 @@ export default function KitchenUsers() {
         <ul className="divide-y">
           {(users ?? []).map((u) => (
             <li key={u.id} className="flex items-center justify-between py-2.5 text-sm">
-              <div><p className="font-medium">{u.full_name || "Kitchen User"}</p><p className="text-xs text-black/45">Created {new Date(u.created_at).toLocaleDateString()}</p></div>
+              <div><p className="font-medium">{u.full_name || "Kitchen User"}</p><p className="text-xs text-black/45">{u.email} · Created {new Date(u.created_at).toLocaleDateString()}</p></div>
               <button className="btn-danger !p-2" aria-label="Delete account"
                 onClick={async () => { if (confirm("Delete this kitchen account?")) { const r = await deleteKitchenUser(u.id); if (r.error) alert(r.error); load(); } }}>
                 <Trash2 className="h-4 w-4" />

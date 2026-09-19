@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
-import { LayoutDashboard, ReceiptText, UtensilsCrossed, Grid2x2, Images, Settings, ChefHat } from "lucide-react";
+import { LayoutDashboard, ReceiptText, UtensilsCrossed, Grid2x2, Images, Settings, ChefHat, LogOut, Users } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/tables", label: "Tables & QR", icon: Grid2x2 },
   { href: "/admin/gallery", label: "Gallery", icon: Images },
   { href: "/admin/kitchen", label: "Kitchen Accounts", icon: ChefHat },
+  { href: "/admin/users", label: "Customers", icon: Users },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -43,8 +44,8 @@ export default function AdminShell({ children }: { children: React.ReactNode; re
             </Link>
           ))}
         </nav>
-        <button className="m-2 btn-ghost justify-start text-sm" onClick={async () => { await createClient().auth.signOut(); router.push("/admin/login"); router.refresh(); }}>
-          <span className="hidden md:inline">Logout</span><span className="md:hidden">⏻</span>
+        <button className="m-2 btn-ghost justify-start text-sm" title="Logout" onClick={async () => { await createClient().auth.signOut(); router.replace("/admin/login"); router.refresh(); }}>
+          <LogOut className="h-4 w-4 shrink-0" /><span className="hidden md:inline">Logout</span>
         </button>
       </aside>
       <div className="ml-16 flex-1 p-4 md:ml-56 md:p-8">{children}</div>

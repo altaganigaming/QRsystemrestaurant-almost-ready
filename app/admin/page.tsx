@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { money } from "@/lib/utils";
 import OpenToggle from "./open-toggle";
 import Link from "next/link";
+import OrderDeleteButton from "./orders/order-delete-button";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function AdminDashboard() {
                 <td className="p-3">{o.payment_status === "paid" ? "✅ Paid" : "Unpaid"}</td>
                 <td className="p-3">{money(o.grand_total, s?.currency)}</td>
                 <td className="p-3 text-black/50">{new Date(o.placed_at).toLocaleString()}</td>
-                <td className="p-3"><Link href={`/admin/orders/${o.id}`} className="text-brand underline">View</Link></td>
+                <td className="p-3"><div className="flex items-center gap-3"><Link href={`/admin/orders/${o.id}`} className="text-brand underline">View</Link><OrderDeleteButton orderId={o.id} /></div></td>
               </tr>
             ))}
           </tbody>

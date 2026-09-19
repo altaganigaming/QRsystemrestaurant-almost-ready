@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { markPaid, setOrderStatus } from "@/lib/actions/admin";
+import { deleteOrder, markPaid, setOrderStatus } from "@/lib/actions/admin";
 import type { Order } from "@/lib/types";
 
 export default function OrderActions({ order }: { order: Order }) {
@@ -32,6 +32,9 @@ export default function OrderActions({ order }: { order: Order }) {
           <button className="btn-danger" onClick={async () => { if (confirm("Cancel this order?")) { const r = await setOrderStatus(order.id, "cancelled"); setMsg(r.error ?? "Order cancelled."); location.reload(); } }}>Cancel</button>
         </div>
       )}
+      <button className="btn-danger" onClick={async () => { if (confirm("Permanently delete this order and its items?")) { const r = await deleteOrder(order.id); if (r.error) setMsg(r.error); else location.href = "/admin/orders"; } }}>
+        Delete Order
+      </button>
       {msg ? <p className="text-sm text-emerald-700">{msg}</p> : null}
     </div>
   );

@@ -116,6 +116,16 @@ export async function setOrderStatus(orderId: string, status: string) {
   }
 }
 
+export async function deleteOrder(orderId: string) {
+  try {
+    const supabase = await requireAdmin();
+    const { error } = await supabase.from("orders").delete().eq("id", orderId);
+    return { error: error?.message ?? null };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to delete order." };
+  }
+}
+
 export async function uploadImage(formData: FormData): Promise<{ url?: string; error?: string }> {
   await requireAdmin();
   const file = formData.get("file") as File | null;
@@ -154,6 +164,32 @@ export async function deleteKitchenUser(userId: string) {
 export async function listKitchenUsers() {
   await requireAdmin();
   const supabase = createAdminClient();
-  const { data } = await supabase.from("profiles").select("id, full_name, created_at").eq("role", "kitchen").order("created_at", { ascending: false });
-  return data ?? [];
+  const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (error) return [];
+  return data.users
+    .filter((user) => user.app_metadata?.role === "kitchen")
+    .map((user) => ({ id: user.id, email: user.email, full_name: user.user_metadata?.full_name ?? "", created_at: user.created_at }))
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+export async function listCustomerUsers() {
+  await requireAdmin();
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (error) return [];
+  return data.users
+    .filter((user) => (user.app_metadata?.role ?? "customer") === "customer")
+    .map((user) => ({ id: user.id, email: user.email, full_name: user.user_metadata?.full_name ?? "", created_at: user.created_at }))
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+export async function deleteCustomerUser(userId: string) {
+  await requireAdmin();
+  const supabase = createAdminClient();
+  const { data: result, error: lookupError } = await supabase.auth.admin.getUserById(userId);
+  if (lookupError || !result.user || (result.user.app_metadata?.role ?? "customer") !== "customer") {
+    return { error: "Only customer accounts can be deleted here." };
+  }
+  const { error } = await supabase.auth.admin.deleteUser(userId);
+  return { error: error?.message ?? null };
 }
