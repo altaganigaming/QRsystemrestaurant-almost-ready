@@ -2,15 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { advanceOrder, markKitchenPaid } from "@/lib/actions/kitchen";
-import { billText } from "@/components/bill";
+import { advanceOrder } from "@/lib/actions/kitchen";
 import type { Order } from "@/lib/types";
 import { money, STATUS_LABEL } from "@/lib/utils";
 
 const COLUMNS = ["new", "preparing", "ready"] as const;
 const PREP_TIMES = [5, 10, 15, 20];
 
-export default function KitchenBoard({ currency, restaurantName }: { currency: string; restaurantName: string }) {
+export default function KitchenBoard({ currency }: { currency: string }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const sound = useRef<HTMLAudioElement | null>(null);
 
@@ -43,10 +42,10 @@ export default function KitchenBoard({ currency, restaurantName }: { currency: s
     return () => { channel.unsubscribe(); };
   }, []);
 
-  async function advance(o: Order, status: Order["status"], prep?: number) {
-    const r = await advanceOrder(o.id, status, prep);
+  async function advance(o: Order, status: Order["status"], prep?: number, paymentStatus?: Order["payment_status"]) {
+    const r = await advanceOrder(o.id, status, prep, paymentStatus, paymentStatus === "paid" ? "upi" : undefined);
     if ("error" in r && r.error) alert(r.error);
-    else setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, status, estimated_prep_minutes: prep ?? x.estimated_prep_minutes } : x)));
+    else setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, status, estimated_prep_minutes: prep ?? x.estimated_prep_minutes, payment_status: paymentStatus ?? x.payment_status } : x)));
   }
 
   return (
@@ -61,7 +60,7 @@ export default function KitchenBoard({ currency, restaurantName }: { currency: s
             </h2>
             <div className="space-y-3">
               {orders.filter((o) => o.status === col).map((o) => (
-                <OrderCard key={o.id} order={o} currency={currency} restaurantName={restaurantName} onAdvance={advance} onPayment={(id) => setOrders((prev) => prev.map((x) => x.id === id ? { ...x, payment_status: "paid", payment_method: "cash" } : x))} />
+                <OrderCard key={o.id} order={o} currency={currency} onAdvance={advance} />
               ))}
               {orders.filter((o) => o.status === col).length === 0 && (
                 <p className="rounded-xl border border-dashed p-4 text-center text-sm text-black/35">No orders</p>
@@ -74,7 +73,7 @@ export default function KitchenBoard({ currency, restaurantName }: { currency: s
   );
 }
 
-function OrderCard({ order, currency, restaurantName, onAdvance, onPayment }: { order: Order; currency: string; restaurantName: string; onAdvance: (o: Order, s: Order["status"], prep?: number) => void; onPayment: (id: string) => void }) {
+function OrderCard({ order, currency, onAdvance }: { order: Order; currency: string; onAdvance: (o: Order, s: Order["status"], prep?: number, paymentStatus?: Order["payment_status"]) => void }) {
   const elapsed = Math.floor((Date.now() - new Date(order.placed_at).getTime()) / 60000);
   return (
     <article className="card p-4">
@@ -108,21 +107,6 @@ function OrderCard({ order, currency, restaurantName, onAdvance, onPayment }: { 
         <span>{money(order.grand_total, currency)}</span>
         <span className="text-xs font-medium text-black/45">{order.payment_status === "paid" ? "PAID" : "UNPAID"}</span>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {order.payment_status === "unpaid" ? (
-          <button className="btn-outline !py-1.5 text-sm" onClick={async () => {
-            const result = await markKitchenPaid(order.id, "cash");
-            if (result.error) alert(result.error);
-            else onPayment(order.id);
-          }}>Mark Paid (Cash)</button>
-        ) : <span className="badge bg-emerald-50 text-emerald-700">Payment received</span>}
-        <a
-          className="btn-outline !py-1.5 text-sm"
-          target="_blank"
-          rel="noreferrer"
-          href={`https://wa.me/?text=${encodeURIComponent(billText(order, restaurantName, currency))}`}
-        >Send Bill on WhatsApp</a>
-      </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {order.status === "new" && (
           <>
@@ -141,6 +125,12 @@ function OrderCard({ order, currency, restaurantName, onAdvance, onPayment }: { 
         {order.status === "ready" && (
           <button className="btn-primary !py-1.5 text-sm" onClick={() => onAdvance(order, "completed")}>Complete</button>
         )}
+        <button
+          className={`btn-ghost !py-1.5 text-sm ${order.payment_status === "paid" ? "text-emerald-700" : "text-amber-700"}`}
+          onClick={() => onAdvance(order, order.status, order.estimated_prep_minutes ?? undefined, order.payment_status === "paid" ? "unpaid" : "paid")}
+        >
+          {order.payment_status === "paid" ? "Set Unpaid" : "Set Paid"}
+        </button>
       </div>
     </article>
   );

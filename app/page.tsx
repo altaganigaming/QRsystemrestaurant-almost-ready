@@ -20,7 +20,7 @@ export default async function Home() {
       >
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 max-w-2xl px-4 text-white">
-          {settings?.logo_url ? <img src={settings.logo_url} alt="" className="mx-auto mb-4 h-20 w-20 rounded-full object-cover ring-4 ring-white/30" /> : null}
+          {settings?.logo_url ? <div className="mx-auto mb-4 grid h-24 w-24 place-items-center rounded-full bg-white/95 p-2 ring-4 ring-white/30"><img src={settings.logo_url} alt={settings?.restaurant_name ?? "Restaurant logo"} className="max-h-full max-w-full object-contain" /></div> : null}
           <h1 className="text-4xl font-extrabold sm:text-5xl">{h.home_title ?? settings?.restaurant_name}</h1>
           {h.home_subtitle ? <p className="mt-3 text-lg text-white/85">{h.home_subtitle}</p> : null}
           <div className="mt-8 flex flex-wrap justify-center gap-3">

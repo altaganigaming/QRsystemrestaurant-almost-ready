@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
-import { placeOrder } from "@/lib/actions/ordering";
 import { money } from "@/lib/utils";
 
 export default function CheckoutPage() {
@@ -40,11 +39,16 @@ function CheckoutInner() {
 
   async function submit() {
     setBusy(true); setError(null);
-    const res = await placeOrder({
-      type, tableCode: delivery ? undefined : tableCode,
-      guestName, guestPhone, address: delivery ? address : undefined, note,
-      items: cart.items,
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        type, tableCode: delivery ? undefined : tableCode,
+        guestName, guestPhone, address: delivery ? address : undefined, note,
+        items: cart.items,
+      }),
     });
+    const res = await response.json() as { error?: string; orderId?: string; accessToken?: string };
     setBusy(false);
     if ("error" in res && res.error) { setError(res.error); return; }
     cart.clear(); cart.setTableCode(null);

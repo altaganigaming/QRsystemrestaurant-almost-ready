@@ -15,19 +15,21 @@ export interface PlaceOrderInput {
 }
 
 export async function placeOrder(input: PlaceOrderInput) {
-  const supabase = createAdminClient();
-  const { data: settings } = await supabase.from("settings").select("*").eq("id", 1).single();
-  if (!settings) return { error: "Restaurant not configured." };
-  if (settings.service_status !== "active") return { error: "Ordering is temporarily unavailable." };
-  if (!settings.is_open) return { error: "Restaurant is currently closed." };
-  if (input.type === "delivery" && !settings.delivery_enabled) return { error: "Home delivery is not available." };
-  if (!input.items?.length) return { error: "Your cart is empty." };
-  if (input.items.length > 100) return { error: "Too many items in one order." };
-  for (const item of input.items) {
-    if (!item.product_id || !Number.isInteger(item.qty) || item.qty < 1 || item.qty > 100) {
-      return { error: "Invalid cart item." };
+  try {
+    const supabase = createAdminClient();
+    const { data: settings, error: settingsError } = await supabase.from("settings").select("*").eq("id", 1).single();
+    if (settingsError) return { error: `Restaurant settings unavailable: ${settingsError.message}` };
+    if (!settings) return { error: "Restaurant not configured." };
+    if (settings.service_status !== "active") return { error: "Ordering is temporarily unavailable." };
+    if (!settings.is_open) return { error: "Restaurant is currently closed." };
+    if (input.type === "delivery" && !settings.delivery_enabled) return { error: "Home delivery is not available." };
+    if (!input.items?.length) return { error: "Your cart is empty." };
+    if (input.items.length > 100) return { error: "Too many items in one order." };
+    for (const item of input.items) {
+      if (!item.product_id || !Number.isInteger(item.qty) || item.qty < 1 || item.qty > 100) {
+        return { error: "Invalid cart item." };
+      }
     }
-  }
 
   const userClient = createClient();
   const { data: { user } } = await userClient.auth.getUser();
@@ -35,8 +37,9 @@ export async function placeOrder(input: PlaceOrderInput) {
   let tableId: string | null = null;
   let tableLabel: string | null = null;
   if (input.type === "dine_in") {
-    const { data: table } = await supabase.from("restaurant_tables")
+    const { data: table, error: tableError } = await supabase.from("restaurant_tables")
       .select("id, name").eq("code", (input.tableCode ?? "").toUpperCase()).eq("is_active", true).maybeSingle();
+    if (tableError) return { error: `Table lookup failed: ${tableError.message}` };
     if (!table) return { error: "Invalid or inactive table code." };
     tableId = table.id; tableLabel = table.name;
   } else {
@@ -46,9 +49,10 @@ export async function placeOrder(input: PlaceOrderInput) {
 
   // Re-verify every price against the database. Client-sent prices are ignored.
   const ids = Array.from(new Set(input.items.map((i) => i.product_id)));
-  const { data: products } = await supabase.from("products")
+  const { data: products, error: productsError } = await supabase.from("products")
     .select("id, name, price, discount_price, is_available, eat_now_enabled, pack_enabled, variants(id,name,price_delta), pack_sizes(id,label,price_delta), addons(id,name,price)")
     .in("id", ids);
+  if (productsError) return { error: `Menu lookup failed: ${productsError.message}` };
   const byId = new Map((products ?? []).map((p) => [p.id as string, p]));
   const anyProduct = byId as unknown as Map<string, any>;
 
@@ -106,14 +110,14 @@ export async function placeOrder(input: PlaceOrderInput) {
     note: input.note?.trim() || null, subtotal, discount, tax, service_charge: serviceCharge, grand_total: grand,
   }).select("id, order_number, access_token").single();
 
-  if (error || !order) return { error: "Could not place the order. Please try again." };
+  if (error || !order) return { error: `Could not place the order: ${error?.message ?? "database did not return the order"}` };
 
   const itemRows = rows.map(({ order_item_addons, lineDiscount, ...r }) => r);
   const { data: insertedItems, error: itemsError } = await supabase.from("order_items")
     .insert(itemRows.map((r) => ({ ...r, order_id: order.id }))).select("id");
   if (itemsError || !insertedItems || insertedItems.length !== rows.length) {
     await supabase.from("orders").delete().eq("id", order.id);
-    return { error: "Order items failed to save." };
+    return { error: `Order items failed to save: ${itemsError?.message ?? "database did not return the items"}` };
   }
 
   const addonRows = rows.flatMap((r, i) =>
@@ -122,11 +126,14 @@ export async function placeOrder(input: PlaceOrderInput) {
     const { error: addonsError } = await supabase.from("order_item_addons").insert(addonRows);
     if (addonsError) {
       await supabase.from("orders").delete().eq("id", order.id);
-      return { error: "Order add-ons failed to save." };
+      return { error: `Order add-ons failed to save: ${addonsError.message}` };
     }
   }
 
-  return { orderId: order.id, accessToken: order.access_token, orderNumber: order.order_number };
+    return { orderId: order.id, accessToken: order.access_token, orderNumber: order.order_number };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not place the order. Please try again." };
+  }
 }
 
 export async function getTrackableOrder(orderId: string, accessToken: string) {

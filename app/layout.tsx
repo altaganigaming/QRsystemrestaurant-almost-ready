@@ -29,7 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CartProvider>
           <SiteHeader settings={s} />
-          <main className="min-h-[70vh] pb-20">{children}</main>
+          <main className="min-h-[70vh]">{children}</main>
           <SiteFooter settings={s} />
           <CartDrawer settings={s} />
         </CartProvider>
