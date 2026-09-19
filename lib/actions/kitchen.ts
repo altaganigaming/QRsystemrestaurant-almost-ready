@@ -12,10 +12,14 @@ async function requireStaff() {
 }
 
 export async function advanceOrder(orderId: string, status: OrderStatus, estimatedPrepMinutes?: number) {
-  const supabase = await requireStaff();
-  const patch: Record<string, unknown> = { status };
-  if (estimatedPrepMinutes) patch.estimated_prep_minutes = estimatedPrepMinutes;
-  const { error } = await supabase.from("orders").update(patch).eq("id", orderId);
-  if (error) return { error: error.message };
-  return { ok: true };
+  try {
+    const supabase = await requireStaff();
+    const patch: Record<string, unknown> = { status };
+    if (estimatedPrepMinutes) patch.estimated_prep_minutes = estimatedPrepMinutes;
+    const { error } = await supabase.from("orders").update(patch).eq("id", orderId);
+    if (error) return { error: error.message };
+    return { ok: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to update order." };
+  }
 }

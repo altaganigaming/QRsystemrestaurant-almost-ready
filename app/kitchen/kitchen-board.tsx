@@ -31,8 +31,10 @@ export default function KitchenBoard({ currency }: { currency: string }) {
         } else if (payload.eventType === "UPDATE") {
           const updated = payload.new as Order;
           setOrders((prev) => {
+            const existing = prev.find((o) => o.id === updated.id);
+            const merged = existing ? { ...existing, ...updated } : updated;
             const rest = prev.filter((o) => o.id !== updated.id);
-            return ["new", "preparing", "ready"].includes(updated.status) ? [...rest, updated as Order] : rest;
+            return ["new", "preparing", "ready"].includes(merged.status) ? [...rest, merged as Order] : rest;
           });
         } else load();
       })

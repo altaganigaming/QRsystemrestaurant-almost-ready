@@ -96,16 +96,24 @@ export async function deleteGallery(id: string) {
 }
 
 export async function markPaid(orderId: string, method: string) {
-  const supabase = await requireAdmin();
-  const { error } = await supabase.from("orders")
-    .update({ payment_status: "paid", payment_method: method }).eq("id", orderId);
-  return { error: error?.message ?? null };
+  try {
+    const supabase = await requireAdmin();
+    const { error } = await supabase.from("orders")
+      .update({ payment_status: "paid", payment_method: method }).eq("id", orderId);
+    return { error: error?.message ?? null };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to update payment." };
+  }
 }
 
 export async function setOrderStatus(orderId: string, status: string) {
-  const supabase = await requireAdmin();
-  const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
-  return { error: error?.message ?? null };
+  try {
+    const supabase = await requireAdmin();
+    const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
+    return { error: error?.message ?? null };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to update order." };
+  }
 }
 
 export async function uploadImage(formData: FormData): Promise<{ url?: string; error?: string }> {
