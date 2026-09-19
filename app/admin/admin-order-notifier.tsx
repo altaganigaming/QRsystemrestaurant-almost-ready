@@ -25,10 +25,12 @@ export default function AdminOrderNotifier({ enabled }: { enabled: boolean }) {
   }, [enabled]);
 
   async function armNotifications() {
+    if (!enabled) return;
     const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (AudioContextClass) {
       audioContext.current = audioContext.current ?? new AudioContextClass();
       await audioContext.current.resume();
+      playBell(audioContext.current);
     }
     setArmed(true);
     if (typeof Notification !== "undefined" && Notification.permission === "default") {

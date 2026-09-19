@@ -118,9 +118,12 @@ export async function setOrderStatus(orderId: string, status: string) {
 
 export async function deleteOrder(orderId: string) {
   try {
-    const supabase = await requireAdmin();
-    const { error } = await supabase.from("orders").delete().eq("id", orderId);
-    return { error: error?.message ?? null };
+    await requireAdmin();
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.from("orders").delete().eq("id", orderId).select("id");
+    if (error) return { error: error.message };
+    if (!data?.length) return { error: "Order not found or already deleted." };
+    return { error: null };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Unable to delete order." };
   }

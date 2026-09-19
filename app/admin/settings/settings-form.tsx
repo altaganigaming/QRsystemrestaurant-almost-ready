@@ -18,8 +18,7 @@ export default function SettingsForm({ settings }: { settings: S }) {
 
   async function save() {
     setBusy(true); setMsg(null);
-    const { theme_colors: _tc, ...patch } = s;
-    const r = await updateSettings(patch as Partial<Settings>);
+    const r = await updateSettings(s as Partial<Settings>);
     setBusy(false);
     setMsg(r.error ? `Error: ${r.error}` : "Settings saved.");
     if (!r.error) location.reload();
