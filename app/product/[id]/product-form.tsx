@@ -101,8 +101,8 @@ export default function ProductForm({ product, settings }: { product: Product; s
           <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note for the kitchen (optional)"
             className="input mt-4" rows={2} />
 
-          <div className="mt-5 flex items-center gap-3">
-            <div className="flex items-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2">
               <button className="btn-outline !p-2" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Decrease"><Minus className="h-4 w-4" /></button>
               <span className="w-8 text-center text-lg font-bold">{qty}</span>
               <button className="btn-outline !p-2" onClick={() => setQty((q) => Math.min(100, q + 1))} aria-label="Increase"><Plus className="h-4 w-4" /></button>
@@ -119,7 +119,7 @@ export default function ProductForm({ product, settings }: { product: Product; s
                 });
                 window.dispatchEvent(new Event("rms:open-cart"));
               }}
-              className="btn-primary flex-1"
+              className="btn-primary min-w-[min(100%,14rem)] flex-1 basis-56"
             >
               {product.is_available ? `Add · ${money(unit * qty, currency)}` : "Unavailable"}
             </button>
