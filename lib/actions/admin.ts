@@ -120,9 +120,9 @@ export async function deleteOrder(orderId: string) {
   try {
     await requireAdmin();
     const supabase = createAdminClient();
-    const { data, error } = await supabase.from("orders").delete().eq("id", orderId).select("id");
+    const { data, error } = await supabase.rpc("hard_delete_order", { target_order_id: orderId });
     if (error) return { error: error.message };
-    if (!data?.length) return { error: "Order not found or already deleted." };
+    if (!data) return { error: "Order not found or already deleted." };
     return { error: null };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Unable to delete order." };
