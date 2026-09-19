@@ -25,18 +25,36 @@ export default function TrackClient({ orderId, token, settings }: { orderId: str
   // Realtime for logged-in customers; 4s polling fallback for guests.
   useEffect(() => {
     const sb = createClient();
+    let disposed = false;
     let channel: ReturnType<typeof sb.channel> | null = null;
     let timer: ReturnType<typeof setInterval> | null = null;
-    sb.auth.getUser().then(({ data: { user } }) => {
+    const setupTracking = async () => {
+      const { data: { user } } = await sb.auth.getUser();
+      if (disposed) return;
+
       if (user) {
-        channel = sb.channel(`track-${orderId}`)
-          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` }, load)
-          .subscribe();
+        channel = sb.channel(`track-${orderId}`);
+        channel.on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
+          load,
+        );
+        if (!disposed) channel.subscribe();
       } else {
         timer = setInterval(load, 4000);
       }
-    });
-    return () => { channel?.unsubscribe(); if (timer) clearInterval(timer); };
+    };
+
+    setupTracking();
+    return () => {
+      disposed = true;
+      if (timer) clearInterval(timer);
+      if (channel) {
+        channel.unsubscribe();
+        sb.removeChannel(channel);
+        channel = null;
+      }
+    };
   }, [orderId, load]);
 
   if (error) return <div className="mx-auto max-w-md px-4 py-16 text-center text-red-600">{error}</div>;

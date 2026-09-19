@@ -14,6 +14,30 @@ export interface PlaceOrderInput {
   items: CartItem[];
 }
 
+function normalizeTableCode(code?: string | null): string[] {
+  const raw = (code ?? "").trim();
+  if (!raw) return [];
+
+  const compact = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!compact) return [];
+
+  const noPrefix = compact.replace(/^TABLE/, "").replace(/^T/, "");
+  const aliases = new Set<string>([compact, noPrefix]);
+
+  if (/^\d+$/.test(noPrefix)) {
+    const digits = noPrefix.replace(/^0+/, "");
+    aliases.add(digits);
+    if (digits) aliases.add(digits.padStart(2, "0"));
+  }
+
+  if (noPrefix) {
+    aliases.add(`T${noPrefix}`);
+    aliases.add(`TABLE${noPrefix}`);
+  }
+
+  return Array.from(aliases).filter(Boolean);
+}
+
 export async function placeOrder(input: PlaceOrderInput) {
   try {
     const supabase = createAdminClient();
@@ -37,8 +61,16 @@ export async function placeOrder(input: PlaceOrderInput) {
   let tableId: string | null = null;
   let tableLabel: string | null = null;
   if (input.type === "dine_in") {
-    const { data: table, error: tableError } = await supabase.from("restaurant_tables")
-      .select("id, name").eq("code", (input.tableCode ?? "").toUpperCase()).eq("is_active", true).maybeSingle();
+    const aliases = normalizeTableCode(input.tableCode);
+    if (!aliases.length) return { error: "Please enter a valid table code." };
+
+    const { data: table, error: tableError } = await supabase
+      .from("restaurant_tables")
+      .select("id, name")
+      .in("code", aliases)
+      .eq("is_active", true)
+      .maybeSingle();
+
     if (tableError) return { error: `Table lookup failed: ${tableError.message}` };
     if (!table) return { error: "Invalid or inactive table code." };
     tableId = table.id; tableLabel = table.name;

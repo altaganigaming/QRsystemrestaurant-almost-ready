@@ -34,7 +34,7 @@ function CheckoutInner() {
   }, []);
 
   const currency = settings?.currency ?? "₹";
-  const tableCode = (cart.tableCode ?? tableInput).toUpperCase();
+  const tableCode = ((cart.tableCode ?? tableInput) ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   const delivery = type === "delivery";
 
   async function submit() {
@@ -43,8 +43,12 @@ function CheckoutInner() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        type, tableCode: delivery ? undefined : tableCode,
-        guestName, guestPhone, address: delivery ? address : undefined, note,
+        type,
+        tableCode: delivery ? undefined : tableCode,
+        guestName,
+        guestPhone,
+        address: delivery ? address : undefined,
+        note,
         items: cart.items,
       }),
     });
