@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 import { LayoutDashboard, ReceiptText, UtensilsCrossed, Grid2x2, Images, Settings, ChefHat } from "lucide-react";
 
 const NAV = [
@@ -19,6 +20,15 @@ const NAV = [
 export default function AdminShell({ children }: { children: React.ReactNode; restaurantName?: string }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    const channel = createClient()
+      .channel("admin-order-refresh")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => router.refresh())
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, [router]);
+
   return (
     <div className="flex min-h-screen bg-surface">
       <aside className="no-print fixed inset-y-0 left-0 z-40 flex w-16 flex-col border-r bg-white md:w-56">

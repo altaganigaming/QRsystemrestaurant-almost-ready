@@ -42,7 +42,7 @@ export default async function Home() {
           <h2 className="mb-6 text-center text-2xl font-bold">{h.gallery_title ?? "Gallery"}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {gallery.map((g: any) => (
-              <img key={g.id} src={g.image_url} alt={g.alt ?? ""} className="aspect-square w-full rounded-2xl object-cover" />
+              <div key={g.id} className="grid aspect-square w-full place-items-center rounded-2xl bg-black/[0.03] p-2"><img src={g.image_url} alt={g.alt ?? ""} className="max-h-full max-w-full object-contain" /></div>
             ))}
           </div>
         </section>

@@ -77,6 +77,16 @@ export default function TrackClient({ orderId, token, settings }: { orderId: str
       <div className="mt-8">
         <Bill order={order} settings={settings} />
       </div>
+      {["completed", "closed"].includes(order.status) && settings?.social?.google_review ? (
+        <a
+          href={settings.social.google_review}
+          target="_blank"
+          rel="noreferrer"
+          className="btn-primary mt-5 w-full"
+        >
+          Share your experience on Google
+        </a>
+      ) : null}
       <p className="mt-4 text-center text-xs text-black/40">This page updates automatically as the kitchen progresses your order.</p>
     </div>
   );

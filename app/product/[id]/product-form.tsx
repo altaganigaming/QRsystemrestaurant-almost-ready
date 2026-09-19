@@ -32,7 +32,7 @@ export default function ProductForm({ product, settings }: { product: Product; s
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="card overflow-hidden sm:grid sm:grid-cols-2">
         {product.image_url
-          ? <img src={product.image_url} alt={product.name} className="h-64 w-full object-cover sm:h-full" />
+          ? <div className="grid min-h-64 w-full place-items-center bg-black/[0.03] p-3 sm:h-full"><img src={product.image_url} alt={product.name} className="max-h-full max-w-full object-contain" /></div>
           : <div className="grid h-64 place-items-center bg-black/5 text-6xl sm:h-full">🍽️</div>}
         <div className="p-5">
           <h1 className="text-2xl font-bold">{product.name}</h1>

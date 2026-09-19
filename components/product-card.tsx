@@ -14,7 +14,7 @@ export default function ProductCard({ product, currency }: { product: Product; c
     <div className={`card overflow-hidden ${out ? "opacity-60" : ""}`}>
       <Link href={`/product/${product.id}`} className="block">
         {product.image_url
-          ? <img src={product.image_url} alt={product.name} className="h-40 w-full object-cover" />
+          ? <div className="grid aspect-[4/3] w-full place-items-center bg-black/[0.03] p-2"><img src={product.image_url} alt={product.name} className="max-h-full max-w-full object-contain" /></div>
           : <div className="grid h-40 place-items-center bg-black/5 text-4xl">🍽️</div>}
       </Link>
       <div className="p-3">

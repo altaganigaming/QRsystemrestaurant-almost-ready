@@ -137,7 +137,7 @@ function ProductModal({ product, categories, onClose, onDone }: { product: Produ
           <label className="flex items-center gap-2"><input type="checkbox" checked={f.pack_enabled} onChange={(e) => set("pack_enabled", e.target.checked)} /> Pack</label>
           <label className="flex items-center gap-2"><input type="checkbox" defaultChecked={product?.is_available ?? true} onChange={(e) => set("is_available", e.target.checked)} /> Available</label>
         </div>
-        {f.image_url ? <img src={f.image_url} alt="" className="h-24 w-24 rounded-xl object-cover sm:col-span-2" /> : null}
+        {f.image_url ? <div className="grid h-24 w-24 place-items-center rounded-xl bg-black/[0.03] p-1 sm:col-span-2"><img src={f.image_url} alt="" className="max-h-full max-w-full object-contain" /></div> : null}
       </div>
       {product ? <OptionEditors product={product} onChanged={() => location.reload()} /> : <p className="text-xs text-black/45">Save first, then add variants, pack sizes and add-ons.</p>}
       <button className="btn-primary w-full" disabled={busy || !f.name.trim()} onClick={save}>{busy ? "Saving…" : "Save Product"}</button>

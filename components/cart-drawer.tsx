@@ -29,7 +29,7 @@ export default function CartDrawer({ settings }: { settings: any }) {
           {cart.items.length === 0 && <p className="text-black/50">Cart is empty.</p>}
           {cart.items.map((i) => (
             <div key={i.key} className="card flex gap-3 p-3">
-              {i.image_url ? <img src={i.image_url} alt="" className="h-16 w-16 rounded-xl object-cover" /> : null}
+              {i.image_url ? <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-black/[0.03] p-1"><img src={i.image_url} alt="" className="max-h-full max-w-full object-contain" /></div> : null}
               <div className="flex-1 text-sm">
                 <p className="font-semibold">{i.name}</p>
                 <p className="text-xs text-black/50">

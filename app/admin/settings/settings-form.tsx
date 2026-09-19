@@ -78,6 +78,7 @@ export default function SettingsForm({ settings }: { settings: S }) {
           {["instagram", "facebook", "twitter", "youtube", "website"].map((k) => (
             <Field key={k} label={k}><input className="input" value={so[k] ?? ""} onChange={(e) => jset("social", k, e.target.value)} /></Field>
           ))}
+          <Field label="Google review link"><input className="input" type="url" placeholder="https://g.page/r/.../review" value={so.google_review ?? ""} onChange={(e) => jset("social", "google_review", e.target.value)} /></Field>
         </div>
       </Section>
 

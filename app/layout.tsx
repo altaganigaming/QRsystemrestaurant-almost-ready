@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Viewport } from "next";
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTheme, themeStyleVars } from "@/lib/themes";
@@ -8,6 +8,12 @@ import SiteFooter from "@/components/site-footer";
 import CartDrawer from "@/components/cart-drawer";
 
 export const dynamic = "force-dynamic";
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();

@@ -31,7 +31,7 @@ export default function GalleryPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {items.map((g) => (
           <div key={g.id} className="group relative">
-            <img src={g.image_url} alt={g.alt ?? ""} className="aspect-square w-full rounded-2xl object-cover" />
+            <div className="grid aspect-square w-full place-items-center rounded-2xl bg-black/[0.03] p-2"><img src={g.image_url} alt={g.alt ?? ""} className="max-h-full max-w-full object-contain" /></div>
             <button className="absolute right-2 top-2 rounded-full bg-white/90 p-2 text-red-600 opacity-0 transition group-hover:opacity-100"
               aria-label="Delete"
               onClick={async () => { if (confirm("Delete photo?")) { await deleteGallery(g.id); location.reload(); } }}>
